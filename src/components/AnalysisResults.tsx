@@ -4,13 +4,13 @@ import React, { useState } from "react";
 import {
   CheckCircle2,
   AlertTriangle,
-  Award,
   Lightbulb,
   Copy,
   Check,
   RotateCcw,
   FileText,
   FileCheck2,
+  Info,
 } from "lucide-react";
 import { AnalysisResult } from "@/lib/types";
 import { ScoreGauge } from "./ScoreGauge";
@@ -31,7 +31,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   const handleCopyReport = async () => {
     const reportText = `=== RESUME AI ANALYSIS REPORT ===
 Candidate Resume: ${fileName || "Uploaded Resume"}
-Match Score: ${data.matchScore}%
+Match Score: ${data.score}%
 
 SUMMARY:
 ${data.summary}
@@ -42,11 +42,11 @@ ${data.matchedSkills.map((s) => `• ${s}`).join("\n")}
 MISSING / REQUIRED SKILLS (${data.missingSkills.length}):
 ${data.missingSkills.map((s) => `• ${s}`).join("\n")}
 
-KEY STRENGTHS:
-${data.strengths.map((s) => `• ${s}`).join("\n")}
+ACTIONABLE SUGGESTIONS (${data.suggestions.length}):
+${data.suggestions.map((s) => `• ${s}`).join("\n")}
 
-RECOMMENDED IMPROVEMENTS:
-${data.improvements.map((s) => `• ${s}`).join("\n")}
+DISCLAIMER:
+${data.disclaimer}
 =================================`;
 
     try {
@@ -105,7 +105,7 @@ ${data.improvements.map((s) => `• ${s}`).join("\n")}
       </div>
 
       {/* 1. Score Gauge Card */}
-      <ScoreGauge score={data.matchScore} />
+      <ScoreGauge score={data.score} />
 
       {/* 2. Executive Summary */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-2">
@@ -133,15 +133,21 @@ ${data.improvements.map((s) => `• ${s}`).join("\n")}
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {data.matchedSkills.map((skill, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-white text-emerald-800 border border-emerald-200/90 shadow-2xs"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                {skill}
-              </span>
-            ))}
+            {data.matchedSkills.length > 0 ? (
+              data.matchedSkills.map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-white text-emerald-800 border border-emerald-200/90 shadow-2xs"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  {skill}
+                </span>
+              ))
+            ) : (
+              <p className="text-xs text-slate-500 italic">
+                No direct matching skills detected for this role.
+              </p>
+            )}
           </div>
         </div>
 
@@ -158,63 +164,53 @@ ${data.improvements.map((s) => `• ${s}`).join("\n")}
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {data.missingSkills.map((skill, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-white text-rose-800 border border-rose-200/90 shadow-2xs"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                {skill}
+            {data.missingSkills.length > 0 ? (
+              data.missingSkills.map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-white text-rose-800 border border-rose-200/90 shadow-2xs"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                  {skill}
+                </span>
+              ))
+            ) : (
+              <p className="text-xs text-slate-500 italic">
+                No critical skill gaps identified.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Actionable Suggestions */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+        <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+          <Lightbulb className="w-4 h-4 text-blue-600" />
+          <h3>Actionable Improvement Suggestions</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {data.suggestions.map((item, idx) => (
+            <div
+              key={idx}
+              className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs sm:text-sm text-slate-700"
+            >
+              <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs shrink-0 font-bold">
+                {idx + 1}
               </span>
-            ))}
-          </div>
+              <span className="leading-relaxed">{item}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* 4. Strengths & Improvement Suggestions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Strengths */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-3">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-            <Award className="w-4 h-4 text-amber-500" />
-            <h3>Key Strengths</h3>
-          </div>
-          <ul className="space-y-2.5">
-            {data.strengths.map((item, idx) => (
-              <li
-                key={idx}
-                className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-600"
-              >
-                <span className="w-4 h-4 rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-[10px] shrink-0 mt-0.5 font-bold">
-                  ✓
-                </span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+      {/* 5. Disclaimer Notice */}
+      {data.disclaimer && (
+        <div className="flex items-start gap-2.5 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs leading-relaxed">
+          <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+          <p>{data.disclaimer}</p>
         </div>
-
-        {/* Recommended Improvements */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-3">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-            <Lightbulb className="w-4 h-4 text-blue-600" />
-            <h3>Improvement Action Plan</h3>
-          </div>
-          <ul className="space-y-2.5">
-            {data.improvements.map((item, idx) => (
-              <li
-                key={idx}
-                className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-600"
-              >
-                <span className="w-4 h-4 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center text-[10px] shrink-0 mt-0.5 font-bold">
-                  {idx + 1}
-                </span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
